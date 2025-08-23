@@ -1,0 +1,31 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000
+    use_sim_time: true
+
+    mobile_base_controller:
+      type: "diff_drive_controller/DiffDriveController"
+
+    joint_broad:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+mobile_base_controller:
+  ros__parameters:
+    left_wheel_names: ["main_wheel_joint_left_to_main_wheel_left"]
+    right_wheel_names: ["main_wheel_joint_right_to_main_wheel_right"]
+
+    command_interfaces: ["velocity"]
+    state_interfaces: ["position", "velocity"]
+
+    wheel_separation: 0.5
+    wheel_radius: 0.1
+    cmd_vel_timeout: 0.5
+    publish_rate: 50.0
+    enable_odom_tf: true
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+    use_sim_time: true
+
+joint_broad:
+  ros__parameters:
+    publish_rate: 50

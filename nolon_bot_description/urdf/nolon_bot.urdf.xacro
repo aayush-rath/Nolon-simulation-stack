@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- 
+nolon_bot Xacro Robot Description
+Author: Aayush Rath | Date: 12/08/2025
+
+Defines the modular robot description for the nolon_bot platform using Xacro macros.  
+Includes base structure, sensors, and extensible components for simulation and visualization in ROS 2.
+
+Features:
+- Includes mobile base, robotic arm and the containment with configurable mesh paths for Gazebo or RViz
+- Sensor integration (e.g., lidar) with fixed joint placement
+- Modular structure for easy extension with additional components or controls
+- Organized file inclusion for maintainable robot architecture
+
+Usage:
+- Include in launch or simulation files for nolon_bot visualization and control
+- Extend by adding new sensors, actuators, or control macros
+- Adjust joint origins and mesh paths for accurate physical representation
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="nolon_bot">
+    <xacro:include filename="mobile_base/mobile_base.urdf.xacro"/>
+    <xacro:include filename="mobile_base/mobile_base.control.xacro"/>
+    <xacro:include filename="sensors/lidar.sensor.xacro"/>
+
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidar_link"/>
+        <origin xyz="-0.1 0 0.5" rpy="0 0 0"/>
+    </joint>
+</robot>

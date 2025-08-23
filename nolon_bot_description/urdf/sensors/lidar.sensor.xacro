@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!-- 
+lidar URDF
+Author: Aayush Rath | Date: 13/08/2025
+
+Defines a URDF model for a cylindrical LiDAR sensor with a Gazebo GPU-based LiDAR plugin.  
+Includes inertial, visual, and collision properties for physical simulation, and  
+Gazebo-specific elements for realistic LiDAR scanning.
+
+Includes:
+- `lidar_link` with inertial, collision, and visual elements (cylindrical geometry)
+- Red visual material for easy identification in RViz and Gazebo
+- Gazebo `Sensors` system plugin for rendering and sensor simulation
+- GPU LiDAR sensor configuration with scan, range, and update parameters
+
+Usage:
+ Add this file to your robot URDF/Xacro description as a sensor link
+- Connect `lidar_link` to the robot base using a `<joint>` in a parent URDF/Xacro file
+- For Gazebo:
+    - Ensure `gz-sim-sensors-system` plugin is available
+    - Launch with a simulation world to visualize `/scan` topic data
+- For RViz:
+    - Subscribe to `/scan` for LiDAR visualization
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="lidar">
+    <link name="lidar_link">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <mass value="0.1"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+        <visual name="">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.05" length="0.1"/>
+            </geometry>
+            <material name="red">
+                <color rgba="1.0 0.0 0.0 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="0.2" length="0.2"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <gazebo>
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+        </plugin>
+    </gazebo>
+
+    <gazebo reference="lidar_link">
+        <sensor name="lidar_link" type="gpu_lidar">
+            <pose>0 0 0.1 0 0 0</pose>
+            <ray>
+            <scan>
+                <horizontal>
+                <samples>180</samples>
+                <resolution>1</resolution>
+                <min_angle>-3.14159</min_angle>
+                <max_angle>3.14159</max_angle>
+                </horizontal>
+            </scan>
+            <range>
+                <min>0.1</min>
+                <max>5.0</max>
+            </range>
+            </ray>
+            <topic>/scan</topic>
+            <visualize>false</visualize>
+            <update_rate>5</update_rate> 
+            <always_on>true</always_on>
+            <gz_frame_id>lidar_link</gz_frame_id>
+        </sensor>
+    </gazebo>
+</robot>

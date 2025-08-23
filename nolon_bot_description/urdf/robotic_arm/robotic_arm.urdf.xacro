@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<!-- 
+nolon_bot Robotic Arm URDF
+Author: Aayush Rath | Date: 10/08/2025
+
+Defines the URDF model for a 6-DOF robotic arm using STL meshes.  
+Implements Xacro macros for reusable link and joint definitions,  
+with conditional mesh path resolution for Gazebo or RViz usage.
+
+Includes:
+- `mesh_link` macro for defining links with visual, collision, and inertial properties
+- `fixed_joint` macro for rigidly connecting links
+- Conditional `mesh_path` property based on `use_gazebo` argument
+- Base link, arm segments, and transient connection meshes
+
+Usage:
+- Set `use_gazebo` argument to `true` for simulation with Gazebo, or `false` for RViz-only usage
+- Place STL meshes in the `meshes/robotic_arm/` directory
+- Launch with:  
+  `ros2 launch urdf_tutorial display.launch.py model:=<path_to_this_file> use_gazebo:=true`
+- Modify joint types for actuation as needed
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot_name">
+
+    <!-- ================= CHECK USAGE ================= -->
+    <xacro:arg name="use_gazebo" default="true"/>
+    
+    <!-- Conditional mesh path -->
+    <xacro:if value="$(arg use_gazebo)">
+        <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/robotic_arm/"/>
+    </xacro:if>
+    <xacro:unless value="$(arg use_gazebo)">
+        <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/"/>
+    </xacro:unless>
+
+    <!-- ================= MACROS ================= -->
+
+    <!-- Generic mesh link -->
+    <xacro:macro name="mesh_link" params="name mesh mass ixx iyy izz ixy ixz iyz ox oy oz orx ory orz">
+        <link name="${name}">
+            <visual>
+                <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+                <geometry>
+                    <mesh filename="${mesh_path}${mesh}"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+                <geometry>
+                    <mesh filename="${mesh_path}${mesh}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="${mass}"/>
+                <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+                <inertia ixx="${ixx}" iyy="${iyy}" izz="${izz}" ixy="${ixy}" ixz="${ixz}" iyz="${iyz}"/>
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <!-- Fixed joint -->
+    <xacro:macro name="fixed_joint" params="parent child ox oy oz orx ory orz">
+        <joint name="${parent}_to_${child}" type="fixed">
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- Revolute joint -->
+    <xacro:macro name="revolute_joint" params="parent child ax ay az ox oy oz orx ory orz lower upper effort vel">
+        <joint name="${parent}_to_${child}" type="revolute">
+            <parent link="${parent}"/>
+            <child link="${child}"/>
+            <axis xyz="${ax} ${ay} ${az}"/>
+            <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+            <limit lower="${lower}" upper="${upper}" effort="${effort}" velocity="${vel}"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- ================= ROBOT STRUCTURE ================= -->
+
+    <!-- BASE LINKS -->
+    <link name="base_link"/>
+    <xacro:mesh_link name="link1" mesh="link1.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.2580" oy="-0.0652" oz="-0.7945" orx="0" ory="0" orz="0"/>
+    <xacro:fixed_joint parent="base_link" child="link1" ox="-0.2580" oy="0.0652" oz="0.7945" orx="0" ory="0" orz="0"/>
+
+    <!-- ARM LINKS -->
+    <xacro:mesh_link name="link2" mesh="link2.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.2580" oy="-0.0652" oz="-0.9739" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link3" mesh="link3.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.2572" oy="-0.1421" oz="-1.1105" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link4" mesh="link4.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.0755" oy="-0.1198" oz="-1.4001" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link5" mesh="link5.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="-0.1375" oy="-0.0633" oz="-1.4383" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link6" mesh="link6.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+    <!-- ARM TRANSIENTS -->
+    <xacro:mesh_link name="link1-2" mesh="link1-2.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.2580" oy="-0.0652" oz="-0.9325" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link2-3" mesh="link2-3.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.2572" oy="-0.1020" oz="-1.1105" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link3-4" mesh="link3-4.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0.0755" oy="-0.0830" oz="-1.4001" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link4-5" mesh="link4-5.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="-0.0994" oy="-0.0635" oz="-1.4448" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link5-6" mesh="link5-6.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+    <xacro:mesh_link name="link6-ee" mesh="link6-ee.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+    <!-- ARM JOINTS (Fixed for now) -->
+    <xacro:fixed_joint parent="link1" child="link1-2" ox="${-0.2580+0.2580}" oy="${0.0652-0.0652}" oz="${0.9325-0.7945}" orx="0" ory="0" orz="0"/>
+    <xacro:revolute_joint parent="link1-2" child="link2" ox="${-0.2580+0.2580}" oy="${0.0652-0.0652}" oz="${0.9739-0.9325}" orx="0" ory="0" orz="0" ax="0" ay="0" az="1" lower="0" upper="5" effort="0" vel="0"/>
+    <xacro:fixed_joint parent="link2" child="link2-3" ox="${-0.2572+0.2580}" oy="${0.1020-0.0652}" oz="${1.1105-0.9739}" orx="0" ory="0" orz="0"/>
+    <xacro:revolute_joint parent="link2-3" child="link3" ox="${-0.2572+0.2572}" oy="${0.1421-0.1020}" oz="${1.1105-1.1105}" orx="0" ory="0" orz="0" ax="0" ay="1" az="0" lower="0" upper="5" effort="0" vel="0"/>
+    <xacro:fixed_joint parent="link3" child="link3-4" ox="${-0.0755+0.2572}" oy="${0.0830-0.1421}" oz="${1.4001-1.1105}" orx="0" ory="0" orz="0"/>
+    <xacro:revolute_joint parent="link3-4" child="link4" ox="${-0.0755+0.0755}" oy="${0.1198-0.0830}" oz="${1.4001-1.4001}" orx="0" ory="0" orz="0" ax="0" ay="1" az="0" lower="0" upper="5" effort="0" vel="0"/>
+    <xacro:fixed_joint parent="link4" child="link4-5" ox="${0.0994+0.0755}" oy="${0.0635-0.1198}" oz="${1.4448-1.4001}" orx="0" ory="0.09" orz="0"/>
+    <xacro:revolute_joint parent="link4-5" child="link5" ox="${0.1375-0.0994}" oy="${0.0633-0.0635}" oz="${1.4383-1.4448}" orx="0" ory="0" orz="0" ax="0.9736" ay="0" az="-0.2279" lower="0" upper="${2*pi}" effort="0" vel="0"/>
+    <xacro:fixed_joint parent="link5" child="link5-6" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+    <xacro:fixed_joint parent="link5-6" child="link6" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+    <xacro:fixed_joint parent="link6" child="link6-ee" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+</robot>

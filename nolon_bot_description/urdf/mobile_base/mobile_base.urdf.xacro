@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+
+<!-- 
+nolon_bot Mobile Base URDF
+Author: Aayush Rath | Date: 08/08/2025
+
+Defines the visual, collision, and kinematic model for the nolon_bot base.  
+Supports both Gazebo and RViz via the 'use_gazebo' argument.  
+
+Includes:
+- Mesh-based links (mir_base, wheels, joints)
+- Fixed, revolute, and continuous joints
+- Simplified inertial values (TODO: replace with accurate data from CAD/Blender)
+- Switchable mesh paths for Gazebo/local visualization
+
+Usage:
+- Launch with `use_gazebo:=true` for Gazebo
+- Adjust joint origins, mesh scales, and inertials for realism
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mobile_base">
+
+  <!-- ================= CHECK USAGE ================= -->
+  <xacro:arg name="use_gazebo" default="true"/>
+  
+  <!-- Conditional mesh path -->
+  <xacro:if value="$(arg use_gazebo)">
+    <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/mobile_base/"/>
+  </xacro:if>
+  <xacro:unless value="$(arg use_gazebo)">
+    <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/"/>
+  </xacro:unless>
+
+  <!-- ================= MACROS ================= -->
+
+  <!-- Generic mesh link -->
+  <xacro:macro name="mesh_link" params="name mesh mass ixx iyy izz ixy ixz iyz ox oy oz orx ory orz">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <geometry>
+          <mesh filename="${mesh_path}${mesh}"/>
+        </geometry>
+        <material name="Grey">
+          <color rgba="0.5 0.5 0.5 1"/> <!-- Medium grey -->
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <geometry>
+          <mesh filename="${mesh_path}${mesh}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <inertia ixx="${ixx}" iyy="${iyy}" izz="${izz}" ixy="${ixy}" ixz="${ixz}" iyz="${iyz}"/>
+      </inertial>
+    </link>
+
+    <gazebo reference="${name}">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Fixed joint -->
+  <xacro:macro name="fixed_joint" params="parent child ox oy oz orx ory orz">
+    <joint name="${parent}_to_${child}" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Revolute joint -->
+  <xacro:macro name="revolute_joint" params="parent child ax ay az ox oy oz orx ory orz lower upper effort vel">
+    <joint name="${parent}_to_${child}" type="revolute">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <axis xyz="${ax} ${ay} ${az}"/>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+      <limit lower="${lower}" upper="${upper}" effort="${effort}" velocity="${vel}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Continuous joint -->
+  <xacro:macro name="continuous_joint" params="parent child ax ay az ox oy oz orx ory orz">
+    <joint name="${parent}_to_${child}" type="continuous">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <axis xyz="${ax} ${ay} ${az}"/>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Macro for a cylindrical wheel -->
+  <xacro:macro name="cyl_wheel" params="name radius length mass">
+    <link name="${name}">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 1.5708 1.5708"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 1.5708 1.5708"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <gazebo reference="${name}">
+      <friction>
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <fdir1>0 0 1</fdir1>
+        <slip1>0.0</slip1>
+        <slip2>0.5</slip2>
+      </friction>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- ================= ROBOT STRUCTURE ================= -->
+
+  <!-- BASE LINKS -->
+  <link name="base_link"/>
+  <xacro:mesh_link name="mir_base" mesh="mir_base.stl" mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="base_link" child="mir_base" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+  <!-- WHEEL HOLDERS -->
+  <xacro:mesh_link name="front_wheel_holder_left"  mesh="front_wheel_holder_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="front_wheel_holder_right" mesh="front_wheel_holder_right.stl" mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_holder_left"   mesh="rear_wheel_holder_left.stl"   mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_holder_right"  mesh="rear_wheel_holder_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+  <xacro:fixed_joint parent="mir_base" child="front_wheel_holder_left"  ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="mir_base" child="front_wheel_holder_right" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="mir_base" child="rear_wheel_holder_left"   ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="mir_base" child="rear_wheel_holder_right"  ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+  <!-- WHEEL JOINTS -->
+  <xacro:mesh_link name="front_wheel_joint_left"  mesh="front_wheel_joint_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2884" oy="-0.1508" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="front_wheel_joint_right" mesh="front_wheel_joint_right.stl" mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2884" oy="0.1508"  oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_joint_left"   mesh="rear_wheel_joint_left.stl"   mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0.2736"  oy="-0.1441" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_joint_right"  mesh="rear_wheel_joint_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0.2736"  oy="0.1441"  oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="main_wheel_joint_left"  mesh="main_wheel_joint_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2884" oy="-0.1508" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="main_wheel_joint_right"  mesh="main_wheel_joint_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2884" oy="0.1508" oz="0" orx="0" ory="0" orz="0"/>
+  
+  <xacro:continuous_joint parent="front_wheel_holder_left" child="front_wheel_joint_left"  ax="0" ay="0" az="1" ox="0.2884" oy="0.1508"  oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:continuous_joint parent="front_wheel_holder_right" child="front_wheel_joint_right" ax="0" ay="0" az="1" ox="0.2884" oy="-0.1508" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:continuous_joint parent="rear_wheel_holder_left" child="rear_wheel_joint_left"  ax="0" ay="0" az="1" ox="-0.2736" oy="0.1441" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:continuous_joint parent="rear_wheel_holder_right" child="rear_wheel_joint_right" ax="0" ay="0" az="1" ox="-0.2736" oy="-0.1441" oz="0" orx="0" ory="0" orz="-0.185"/>
+  <!-- <xacro:revolute_joint parent="front_wheel_holder_left" child="main_wheel_joint_left"  ax="0" ay="0" az="1" ox="0.2884" oy="0.1508"  oz="0" orx="0" ory="0" orz="0" lower="0" upper="1" effort="0" vel="0"/>
+  <xacro:revolute_joint parent="front_wheel_holder_right" child="main_wheel_joint_right"  ax="0" ay="0" az="1" ox="0.2884" oy="-0.1508"  oz="0" orx="0" ory="0" orz="0" lower="-1" upper="0" effort="0" vel="0"/> -->
+  <xacro:fixed_joint parent="front_wheel_holder_left" child="main_wheel_joint_left" ox="0.2884" oy="0.1508"  oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="front_wheel_holder_right" child="main_wheel_joint_right" ox="0.2884" oy="-0.1508"  oz="0" orx="0" ory="0" orz="0"/>
+
+  <!-- CASTER WHEELS -->
+  
+  <!-- <xacro:mesh_link name="front_wheel_left"  mesh="front_wheel_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2527" oy="-0.1527" oz="-0.0627" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="front_wheel_right"  mesh="front_wheel_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.2527" oy="0.1527" oz="-0.0627" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_left"  mesh="rear_wheel_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0.3095" oy="-0.1539" oz="-0.0627" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="rear_wheel_right"  mesh="rear_wheel_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="0.3095" oy="0.1539" oz="-0.0627" orx="0" ory="0" orz="0"/> -->
+
+  <xacro:cyl_wheel name="front_wheel_left"  radius="0.063" length="0.02" mass="0.3"/>
+  <xacro:cyl_wheel name="front_wheel_right" radius="0.063" length="0.02" mass="0.3"/>
+  <xacro:cyl_wheel name="rear_wheel_left"   radius="0.063" length="0.02" mass="0.3"/>
+  <xacro:cyl_wheel name="rear_wheel_right"  radius="0.063" length="0.02" mass="0.3"/>
+
+  <xacro:continuous_joint parent="front_wheel_joint_left" child="front_wheel_left"  ax="0" ay="1" az="0" ox="${-0.2884+0.2527}" oy="${-0.1508+0.1527}"  oz="0.0627" orx="0" ory="0" orz="0"/>
+  <xacro:continuous_joint parent="front_wheel_joint_right" child="front_wheel_right" ax="0" ay="1" az="0" ox="${-0.2884+0.2527}" oy="${0.1508-0.1527}"  oz="0.0627" orx="0" ory="0" orz="0"/>
+  <xacro:continuous_joint parent="rear_wheel_joint_left" child="rear_wheel_left"  ax="0" ay="1" az="0" ox="${0.2736-0.3095}" oy="${0.1539-0.1441}" oz="0.0627" orx="0" ory="0" orz="0.0"/>
+  <xacro:continuous_joint parent="rear_wheel_joint_right" child="rear_wheel_right" ax="0" ay="1" az="0" ox="${0.2736-0.3095}" oy="${-0.1539+0.1441}" oz="0.0627" orx="0" ory="0" orz="0.0"/>
+
+  <!-- ACTUATED WHEELS -->
+
+  <!-- <xacro:mesh_link name="main_wheel_left"  mesh="main_wheel_left.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.0054" oy="-0.1630" oz="-0.0994" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="main_wheel_right"  mesh="main_wheel_right.stl"  mass="0.3" ixx="0.05" iyy="0.05" izz="0.05" ixy="0" ixz="0" iyz="0" ox="-0.0054" oy="0.1630" oz="-0.0994" orx="0" ory="0" orz="0"/> -->
+
+  <xacro:cyl_wheel name="main_wheel_left"  radius="0.100" length="0.025" mass="0.3"/>
+  <xacro:cyl_wheel name="main_wheel_right" radius="0.100" length="0.025" mass="0.3"/>
+
+  <xacro:continuous_joint parent="main_wheel_joint_left" child="main_wheel_left"  ax="0" ay="1" az="0" ox="${-0.2884+0.0054}" oy="${-0.1508+0.1630}" oz="0.0994" orx="0" ory="0" orz="0.0"/>
+  <xacro:continuous_joint parent="main_wheel_joint_right" child="main_wheel_right" ax="0" ay="1" az="0" ox="${-0.2884+0.0054}" oy="${0.1508-0.1630}" oz="0.0994" orx="0" ory="0" orz="0.0"/>
+</robot>

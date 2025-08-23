@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!-- 
+nolon_bot ros2_control + Gazebo Plugin
+Author: Aayush Rath | Date: 09/08/2025
+
+Defines the ROS 2 Control system integration for the nolon_bot mobile base.  
+Uses the GazeboSimSystem plugin to interface joint commands and states between ROS 2 and Gazebo.  
+
+Includes:
+- Velocity command interfaces for left and right wheel joints
+- Position and velocity state interfaces for feedback
+- Integration with `gz_ros2_control` for simulation-based control
+- External configuration via `nolon_bot_control.yaml`
+
+Usage:
+- Ensure `nolon_bot_control.yaml` is correctly configured in `nolon_bot_description/config/`
+- Load in Gazebo with appropriate robot description
+- Control via `diff_drive_controller`
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- ================= DIFFERENTIAL DRIVE CONTROLLER ================= -->
+    <ros2_control name="GazeboSimSystem" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+
+        <joint name="main_wheel_joint_left_to_main_wheel_left">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="main_wheel_joint_right_to_main_wheel_right">
+            <command_interface name="velocity"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+
+        <joint name="front_wheel_joint_left_to_front_wheel_left">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="front_wheel_joint_right_to_front_wheel_right">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="rear_wheel_joint_left_to_rear_wheel_left">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="rear_wheel_joint_right_to_rear_wheel_right">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="front_wheel_joint_left_to_front_wheel_left">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="front_wheel_joint_right_to_front_wheel_right">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="rear_wheel_joint_left_to_rear_wheel_left">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="rear_wheel_joint_right_to_rear_wheel_right">
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+    <gazebo>
+        <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find nolon_bot_description)/config/nolon_bot_control.yaml</parameters>
+            <controller_manager_node_name>controller_manager</controller_manager_node_name>
+        </plugin>
+    </gazebo>
+</robot>
