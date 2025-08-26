@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!-- 
+Camera URDF/Xacro
+Author: Aayush Rath | Date: 26/08/2025
+
+Defines a URDF model for an RGBD camera sensor with a Gazebo depth camera plugin.  
+Includes inertial, visual, and collision properties for physical simulation, and  
+Gazebo-specific elements for realistic camera image and depth rendering.
+
+Includes:
+- `camera_link` with inertial, collision, and visual elements (mesh geometry)
+- Gray visual material for easy identification in RViz and Gazebo
+- Optical frame (`camera_optical_frame`) with ROS-compliant orientation
+- Gazebo depth camera sensor configuration with image, clip, and update parameters
+- Gazebo ROS camera plugin for publishing image and camera info topics
+
+Usage:
+- Add this file to your robot URDF/Xacro description as a sensor link
+- Connect `camera_link` to the robot base using a `<joint>` in a parent URDF/Xacro file
+- Subscribe to `/image_raw` for camera visualization
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="lidar">
+    <!-- Conditional mesh path -->
+    <xacro:if value="$(arg use_gazebo)">
+        <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/sensors/"/>
+    </xacro:if>
+    <xacro:unless value="$(arg use_gazebo)">
+        <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/sensors/"/>
+    </xacro:unless>
+
+    <link name="camera_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+            <geometry>
+                <mesh filename="${mesh_path}/d455.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="gray">
+                <color rgba="0.6 0.6 0.6 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+            <geometry>
+                <mesh filename="${mesh_path}/d455.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.2"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+        </inertial>
+    </link>
+
+    <link name="camera_optical_frame"/>
+
+    <joint name="camera_optical_joint" type="fixed">
+        <parent link="camera_link"/>
+        <child link="camera_optical_frame"/>
+        <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+    </joint>
+
+    <gazebo reference="camera_link">
+        <sensor type="rgbd_camera" name="rgbd_camera">
+            <update_rate>30</update_rate>
+            <pose>0 0 0 0 0 0</pose>
+            <camera>
+                <horizontal_fov>1.047</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.05</near>
+                    <far>5.0</far>
+                </clip>
+            </camera>
+            <gz_frame_id>camera_link</gz_frame_id>
+            <topic>rgbd_camera</topic>
+            <visualize>true</visualize>
+        </sensor>
+    </gazebo>
+</robot>

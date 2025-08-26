@@ -18,8 +18,9 @@ Usage:
 - Adjust joint origins and mesh paths for accurate physical representation
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="nolon_bot">
-
+    <xacro:arg name="use_gazebo" default="true"/>
     <xacro:property name="use_lidar" value="false"/>
+    <xacro:property name="use_camera" value="true"/>
 
     <xacro:include filename="mobile_base/mobile_base.urdf.xacro"/>
     <xacro:include filename="mobile_base/mobile_base.control.xacro"/>
@@ -35,14 +36,21 @@ Usage:
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </joint>
     </xacro:if>
-<!-- -0.1 0 0.5-->
+
+    <xacro:if value="${use_camera}">
+        <xacro:include filename="sensors/camera.sensor.xacro"/>
+        <joint name="camera_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="camera_link"/>
+            <origin xyz="0 0 2" rpy="0 0 0"/>
+        </joint>
+    </xacro:if>
+
     <joint name="containment_to_mobile_base" type="fixed">
         <parent link="base_link"/>
         <child link="containment_box"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
-
-    <!-- <link name="world"/> -->
     
     <joint name="robotic_arm_to_containment" type="fixed"> 
         <parent link="containment_box"/>
@@ -54,6 +62,9 @@ Usage:
         <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
             <parameters>$(find nolon_bot_description)/config/nolon_bot_control.yaml</parameters>
             <controller_manager_node_name>controller_manager</controller_manager_node_name>
+        </plugin>
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
         </plugin>
     </gazebo>
 </robot>

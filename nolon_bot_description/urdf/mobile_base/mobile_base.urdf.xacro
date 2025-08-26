@@ -25,10 +25,10 @@ Usage:
   
   <!-- Conditional mesh path -->
   <xacro:if value="$(arg use_gazebo)">
-    <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/mobile_base/"/>
+    <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/mobile_base/"/>
   </xacro:if>
   <xacro:unless value="$(arg use_gazebo)">
-    <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/"/>
+    <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/mobile_base/"/>
   </xacro:unless>
 
   <!-- ================= MACROS ================= -->

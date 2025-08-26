@@ -19,7 +19,8 @@ import xacro
 
 from launch import LaunchDescription
 from ament_index_python import get_package_share_directory
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -72,31 +73,48 @@ def generate_launch_description():
         executable='parameter_bridge',
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan'
+            '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
+            'rgbd_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            'rgbd_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
         ],
         parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
-    joint_state_broadcaster_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['joint_broad'],
-        parameters=[{"use_sim_time": True}]
+    joint_state_broadcaster_spawner = RegisterEventHandler(
+        OnProcessExit(
+            target_action= gz_spawn_entity,
+            on_exit= Node(
+                package='controller_manager',
+                executable='spawner',
+                arguments=['joint_broad', '--controller-manager-timeout', '50'],
+                parameters=[{"use_sim_time": True}]
+            )
+        )
     )
 
-    mobile_base_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['mobile_base_controller', '--param-file', config_path],
-        parameters=[{"use_sim_time": True}]
+    mobile_base_controller_spawner = RegisterEventHandler(
+            OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit= Node(
+                package='controller_manager',
+                executable='spawner',
+                arguments=['mobile_base_controller', '--param-file', config_path, '--controller-manager-timeout', '50'],
+                parameters=[{"use_sim_time": True}]
+            )
+        )
     )
 
-    robotic_arm_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['robotic_arm_controller', '--param-file', config_path],
-        parameters=[{"use_sim_time": True}]
+    robotic_arm_controller_spawner = RegisterEventHandler(
+            OnProcessExit(
+            target_action=gz_spawn_entity,
+            on_exit=Node(
+                package='controller_manager',
+                executable='spawner',
+                arguments=['robotic_arm_controller', '--param-file', config_path, '--controller-manager-timeout', '50'],
+                parameters=[{"use_sim_time": True}]
+            )
+        )
     )
 
     return LaunchDescription([

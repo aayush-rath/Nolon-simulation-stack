@@ -30,8 +30,8 @@ USE_SIM_TIME = True
 LOG_LEVEL = "info"
 # A generic MoveIt RViz config; replace with your own if you have one
 RVIZ_CONFIG = os.path.join(
-    get_package_share_directory("moveit_resources_panda_moveit_config"),
-    "launch",
+    PKG,
+    "rviz",
     "moveit.rviz",
 )
 

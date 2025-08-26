@@ -46,12 +46,6 @@ Usage:
         </collision>
     </link>
 
-    <gazebo>
-        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-            <render_engine>ogre2</render_engine>
-        </plugin>
-    </gazebo>
-
     <gazebo reference="lidar_link">
         <sensor name="lidar_link" type="gpu_lidar">
             <pose>0 0 0.1 0 0 0</pose>
