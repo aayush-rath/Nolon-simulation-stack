@@ -1,4 +1,4 @@
-# Nolon Bot - ROS2 Mobile Manipulator
+# Nolon Bot
 
 A comprehensive ROS2 package for a mobile manipulator robot with navigation, mapping, and manipulation capabilities.
 
@@ -36,8 +36,8 @@ The Nolon Bot is a mobile manipulator system that combines:
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd <your-repo-name>
+git clone https://github.com/aayush-rath/Nolon-simulation-stack.git
+cd Nolon-simulation-stack
 ```
 
 ### 2. Build and Run with Docker Compose
@@ -304,3 +304,4 @@ For issues and questions:
 - MoveIt2 developers
 - Gazebo simulation community
 - Open source robotics community
+- Xarm URDF
