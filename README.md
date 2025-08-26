@@ -1,4 +1,4 @@
-# Nolon Bot - ROS2 Mobile Manipulator
+# Nolon Bot
 
 A comprehensive ROS2 package for a mobile manipulator robot with navigation, mapping, and manipulation capabilities.
 
