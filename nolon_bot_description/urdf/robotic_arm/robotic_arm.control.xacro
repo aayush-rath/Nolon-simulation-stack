@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!-- 
+6-DOF Robotic Arm Control Configuration
+Author: Aayush Rath | Date: 10/08/2025
+
+Defines the ros2_control configuration for the robotic arm.
+This file should be included in your main robot URDF when control is needed.
+
+Includes:
+- ros2_control hardware interface configuration
+- Joint command and state interfaces for position control
+- Gazebo ros2_control plugin configuration
+
+Usage:
+- Include this file in your main robot URDF using:
+  <xacro:include filename="robotic_arm_control.urdf.xacro"/>
+  <xacro:robotic_arm_control/>
+- Ensure the controller configuration YAML file exists at the specified path
+-->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- ROS2 Control Configuration -->
+    <ros2_control name="robotic_arm_controller" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+        
+        <!-- Joint 1 Interface -->
+        <joint name="joint1">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <!-- Joint 2 Interface -->
+        <joint name="joint2">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <!-- Joint 3 Interface -->
+        <joint name="joint3">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <!-- Joint 4 Interface -->
+        <joint name="joint4">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <!-- Joint 5 Interface -->
+        <joint name="joint5">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        
+        <!-- Joint 6 Interface -->
+        <joint name="joint6">
+            <command_interface name="position"/>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
+
+</robot>

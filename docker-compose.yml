@@ -1,0 +1,283 @@
+version: '3.8'
+
+services:
+  # Main robot simulation service
+  nolon-bot-sim:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_simulation
+    hostname: nolon-bot-sim
+    networks:
+      - ros2_network
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - GAZEBO_MASTER_URI=http://localhost:11345
+      - GAZEBO_MODEL_PATH=/opt/ros_ws/src/nolon_bot_description
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      # X11 forwarding for GUI
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      # Persistent data volumes
+      - ./maps:/opt/ros_ws/maps:rw
+      - ./logs:/opt/ros_ws/logs:rw
+      # Source code (for development)
+      - ./nolon_bot_description:/opt/ros_ws/src/nolon_bot_description:rw
+    ports:
+      # ROS2 DDS discovery
+      - "7400:7400/udp"
+      - "7401:7401/udp" 
+      # Gazebo
+      - "11345:11345"
+    devices:
+      # GPU acceleration (if available)
+      - /dev/dri:/dev/dri
+    privileged: false
+    security_opt:
+      - seccomp:unconfined
+    command: >
+      bash -c "
+        echo 'Starting Nolon Bot Simulation...';
+        ros2 launch nolon_bot_description sim.launch.py
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+
+  # ROS2 Master/Discovery service
+  ros2-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_master
+    hostname: ros2-master
+    networks:
+      - ros2_network
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    ports:
+      - "11311:11311"
+    command: >
+      bash -c "
+        echo 'ROS2 Master node ready';
+        tail -f /dev/null
+      "
+    restart: unless-stopped
+
+  # Navigation service
+  nolon-bot-navigation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_navigation
+    hostname: nolon-bot-nav
+    networks:
+      - ros2_network
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    volumes:
+      - ./maps:/opt/ros_ws/maps:ro
+      - ./nolon_bot_description/config:/opt/ros_ws/src/nolon_bot_description/config:ro
+    command: >
+      bash -c "
+        echo 'Waiting for simulation to start...';
+        sleep 10;
+        echo 'Starting Navigation Stack...';
+        ros2 launch nolon_bot_description navigation.launch.py
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+      - nolon-bot-sim
+    profiles:
+      - navigation
+
+  # Mapping service
+  nolon-bot-mapping:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_mapping
+    hostname: nolon-bot-mapper
+    networks:
+      - ros2_network
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    volumes:
+      - ./maps:/opt/ros_ws/maps:rw
+      - ./nolon_bot_description/config:/opt/ros_ws/src/nolon_bot_description/config:ro
+    command: >
+      bash -c "
+        echo 'Waiting for simulation to start...';
+        sleep 10;
+        echo 'Starting SLAM Mapping...';
+        ros2 launch nolon_bot_description mapping.launch.py
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+      - nolon-bot-sim
+    profiles:
+      - mapping
+
+  # MoveIt2 manipulation service
+  nolon-bot-moveit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_moveit
+    hostname: nolon-bot-moveit
+    networks:
+      - ros2_network
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - ./nolon_bot_description/moveit_config:/opt/ros_ws/src/nolon_bot_description/moveit_config:ro
+    command: >
+      bash -c "
+        echo 'Waiting for simulation to start...';
+        sleep 15;
+        echo 'Starting MoveIt2 Motion Planning...';
+        ros2 launch nolon_bot_description move_group.launch.py
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+      - nolon-bot-sim
+    profiles:
+      - manipulation
+
+  # RViz visualization service
+  nolon-bot-rviz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_rviz
+    hostname: nolon-bot-rviz
+    networks:
+      - ros2_network
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - ./nolon_bot_description/rviz:/opt/ros_ws/src/nolon_bot_description/rviz:ro
+    command: >
+      bash -c "
+        echo 'Waiting for other services...';
+        sleep 20;
+        echo 'Starting RViz2...';
+        rviz2 -d /opt/ros_ws/src/nolon_bot_description/rviz/nolon_bot_navigation.rviz
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+      - nolon-bot-sim
+    profiles:
+      - visualization
+
+  # Teleoperation service
+  nolon-bot-teleop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_teleop
+    hostname: nolon-bot-teleop
+    networks:
+      - ros2_network
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "
+        echo 'Teleoperation ready. Use WASD keys to control the robot.';
+        echo 'Starting keyboard teleop...';
+        ros2 run teleop_twist_keyboard teleop_twist_keyboard
+      "
+    restart: unless-stopped
+    depends_on:
+      - ros2-master
+      - nolon-bot-sim
+    profiles:
+      - teleop
+
+  # Development shell service
+  nolon-bot-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    image: nolon-bot:latest
+    container_name: nolon_bot_development
+    hostname: nolon-bot-dev
+    networks:
+      - ros2_network
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - ./:/workspace:rw
+      - ./nolon_bot_description:/opt/ros_ws/src/nolon_bot_description:rw
+    stdin_open: true
+    tty: true
+    working_dir: /opt/ros_ws
+    command: bash
+    profiles:
+      - development
+
+networks:
+  ros2_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  maps_data:
+    driver: local
+  logs_data:
+    driver: local

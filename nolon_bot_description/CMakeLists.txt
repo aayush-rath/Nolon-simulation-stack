@@ -28,9 +28,12 @@ endif()
 
 add_executable(teleop_node src/teleop_node.cpp)
 ament_target_dependencies(teleop_node rclcpp geometry_msgs)
-
-install(DIRECTORY urdf config meshes launch world rviz maps DESTINATION share/${PROJECT_NAME})
-
 install(TARGETS teleop_node DESTINATION lib/${PROJECT_NAME})
+
+add_executable(teleop_force_node src/teleop_force_node.cpp)
+ament_target_dependencies(teleop_force_node rclcpp geometry_msgs)
+install(TARGETS teleop_force_node DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY urdf srdf config meshes launch world rviz maps moveit_config DESTINATION share/${PROJECT_NAME})
 
 ament_package()

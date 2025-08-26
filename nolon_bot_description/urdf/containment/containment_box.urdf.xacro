@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+
+<!-- 
+nolon_bot Containment URDF
+Author: Aayush Rath | Date: 25/08/2025
+
+Defines the visual and collisionfor the nolon_bot base.  
+Supports both Gazebo and RViz via the 'use_gazebo' argument.  
+
+Includes:
+- Mesh-based links
+- Simplified inertial values (TODO: replace with accurate data from CAD/Blender)
+- Switchable mesh paths for Gazebo/local visualization
+
+Usage:
+- Launch with `use_gazebo:=true` for Gazebo
+- Adjust joint origins, mesh scales, and inertials for realism
+
+TODO:
+- Add more complex structures to simulate world functionality
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mobile_base">
+
+  <!-- ================= CHECK USAGE ================= -->
+  <xacro:arg name="use_gazebo" default="true"/>
+  
+  <!-- Conditional mesh path -->
+  <xacro:if value="$(arg use_gazebo)">
+    <xacro:property name="mesh_path" value="file:///home/aayush/Internship/nolon_bot_ws/src/nolon_bot_description/meshes/containment/"/>
+  </xacro:if>
+  <xacro:unless value="$(arg use_gazebo)">
+    <xacro:property name="mesh_path" value="$(find nolon_bot_description)/meshes/"/>
+  </xacro:unless>
+
+  <!-- ================= MACROS ================= -->
+
+  <!-- Generic mesh link -->
+<xacro:macro name="mesh_link" params="name mesh mass ixx iyy izz ixy ixz iyz ox oy oz orx ory orz">
+  <link name="${name}">
+    <visual>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+      <geometry>
+        <mesh filename="${mesh_path}${mesh}"/>
+      </geometry>
+      <material name="DarkGreyShiny">
+        <!-- Darker grey -->
+        <color rgba="0.3 0.3 0.3 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+      <geometry>
+        <mesh filename="${mesh_path}${mesh}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${mass}"/>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+      <inertia ixx="${ixx}" iyy="${iyy}" izz="${izz}" ixy="${ixy}" ixz="${ixz}" iyz="${iyz}"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="${name}">
+    <material>Gazebo/Grey</material>
+    <material>
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <diffuse>0.3 0.3 0.3 1</diffuse>
+      <specular>0.6 0.6 0.6 1</specular>
+      <emissive>0 0 0 1</emissive>
+    </material>
+  </gazebo>
+</xacro:macro>
+
+
+  <!-- ================= ROBOT STRUCTURE ================= -->
+
+  <!-- Containment Box -->
+  <xacro:mesh_link name="containment_box" mesh="containment_box.stl" mass="5.0" ixx="2.0" iyy="2.0" izz="2.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+</robot>

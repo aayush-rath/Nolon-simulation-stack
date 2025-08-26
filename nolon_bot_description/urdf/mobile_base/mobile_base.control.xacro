@@ -69,10 +69,4 @@ Usage:
             <state_interface name="velocity"/>
         </joint>
     </ros2_control>
-    <gazebo>
-        <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-            <parameters>$(find nolon_bot_description)/config/nolon_bot_control.yaml</parameters>
-            <controller_manager_node_name>controller_manager</controller_manager_node_name>
-        </plugin>
-    </gazebo>
 </robot>

@@ -92,12 +92,12 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}]
     )
 
-    # xarm_controller_spawner = Node(
-    #     package='controller_manager',
-    #     executable='spawner',
-    #     arguments=['xarm_controller', '--param-file', config_path],
-    #     parameters=[{"use_sim_time": True}]
-    # )
+    robotic_arm_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['robotic_arm_controller', '--param-file', config_path],
+        parameters=[{"use_sim_time": True}]
+    )
 
     return LaunchDescription([
         # env_var,
@@ -106,6 +106,6 @@ def generate_launch_description():
         gz_spawn_entity,
         ros_gz_bridge_node,
         joint_state_broadcaster_spawner,
-        mobile_base_controller_spawner
-        # xarm_controller_spawner,
+        mobile_base_controller_spawner,
+        robotic_arm_controller_spawner
     ])
