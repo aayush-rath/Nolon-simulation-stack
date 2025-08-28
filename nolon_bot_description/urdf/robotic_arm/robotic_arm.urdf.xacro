@@ -20,7 +20,7 @@ Usage:
   `ros2 launch urdf_tutorial display.launch.py model:=<path_to_this_file> use_gazebo:=true`
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robotic_arm">
-
+    <xacro:arg name="use_gazebo" default="false"/>
     <!-- ================= CHECK USAGE ================= -->
     <!-- Conditional mesh path -->
     <xacro:if value="$(arg use_gazebo)">

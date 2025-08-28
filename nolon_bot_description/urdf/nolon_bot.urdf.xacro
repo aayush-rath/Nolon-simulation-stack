@@ -18,9 +18,9 @@ Usage:
 - Adjust joint origins and mesh paths for accurate physical representation
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="nolon_bot">
-    <xacro:arg name="use_gazebo" default="true"/>
+    <xacro:arg name="use_gazebo" default="false"/>
     <xacro:property name="use_lidar" value="false"/>
-    <xacro:property name="use_camera" value="true"/>
+    <xacro:property name="use_camera" value="false"/>
 
     <xacro:include filename="mobile_base/mobile_base.urdf.xacro"/>
     <xacro:include filename="mobile_base/mobile_base.control.xacro"/>

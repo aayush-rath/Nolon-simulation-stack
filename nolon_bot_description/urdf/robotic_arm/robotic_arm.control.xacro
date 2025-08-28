@@ -27,42 +27,60 @@ Usage:
         
         <!-- Joint 1 Interface -->
         <joint name="joint1">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">${-2.0*pi}</param>
+                <param name="max">${2.0*pi}</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
         
         <!-- Joint 2 Interface -->
         <joint name="joint2">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">-2.059</param>
+                <param name="max">2.0944</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
         
         <!-- Joint 3 Interface -->
         <joint name="joint3">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">-3.927</param>
+                <param name="max">0.19198</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
         
         <!-- Joint 4 Interface -->
         <joint name="joint4">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">${-2.0*pi}</param>
+                <param name="max">${2.0*pi}</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
         
         <!-- Joint 5 Interface -->
         <joint name="joint5">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">-1.69297</param>
+                <param name="max">${pi}</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
         
         <!-- Joint 6 Interface -->
         <joint name="joint6">
-            <command_interface name="position"/>
+            <command_interface name="position">
+                <param name="min">${-2.0*pi}</param>
+                <param name="max">${2.0*pi}</param>
+            </command_interface>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>

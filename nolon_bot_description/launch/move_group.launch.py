@@ -17,71 +17,82 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 
-# -----------------------------
-# Simple toggles / paths
-# -----------------------------
-PKG = "nolon_bot_description"
-URDF_XACRO = os.path.join("urdf", "nolon_bot.urdf.xacro")
-SRDF_XACRO = os.path.join("srdf", "robotic_arm.srdf.xacro")
-MOVEIT_CFG_DIR = "moveit_config"
-
-ENABLE_RVIZ = True
-USE_SIM_TIME = True
-LOG_LEVEL = "info"
-# A generic MoveIt RViz config; replace with your own if you have one
-RVIZ_CONFIG = os.path.join(
-    PKG,
-    "rviz",
-    "moveit.rviz",
-)
-
-
-def load_yaml(pkg: str, rel_path: str):
-    base = get_package_share_directory(pkg)
-    abs_path = os.path.join(base, rel_path)
+def load_yaml(abs_path):
+    if not os.path.exists(abs_path):
+        raise FileNotFoundError(f"YAML file not found: {abs_path}")
     with open(abs_path, "r") as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f)
+        if data is None:
+            raise ValueError(f"YAML file is empty: {abs_path}")
+        return data
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory(PKG)
+    pkg_share = get_package_share_directory('nolon_bot_description')
+    urdf_path = os.path.join(pkg_share, 'urdf', 'robotic_arm/robotic_arm.urdf.xacro')
+    SRDF_XACRO = os.path.join("srdf", "robotic_arm.srdf.xacro")
 
-    # -----------------------------
-    # Build robot_description (URDF)
-    # -----------------------------
-    urdf_path = os.path.join(pkg_share, URDF_XACRO)
+    ENABLE_RVIZ = True
+    ENABLE_SERVO = True
+    USE_SIM_TIME = True
+    LOG_LEVEL = "info"
+    # A generic MoveIt RViz config; replace with your own if you have one
+    RVIZ_CONFIG = os.path.join(
+        pkg_share,
+        "rviz",
+        "nolon_bot_moveit.rviz",
+    )
+
     urdf_doc = xacro.process_file(urdf_path)
     robot_description = {"robot_description": urdf_doc.toxml()}
 
-    # -----------------------------
-    # Build robot_description_semantic (SRDF)
-    # -----------------------------
     srdf_path = os.path.join(pkg_share, SRDF_XACRO)
     srdf_doc = xacro.process_file(srdf_path)
+
+    servo_params = {
+        "moveit_servo": load_yaml(
+            os.path.join(pkg_share, "moveit_config", "servo.yaml")
+        )
+    }
+    servo_params["moveit_servo"].update({"use_gazebo": USE_SIM_TIME})
+
     robot_description_semantic = {
         "robot_description_semantic": srdf_doc.toxml()
     }
 
-    # -----------------------------
-    # MoveIt configs
-    # -----------------------------
     robot_description_kinematics = {
         "robot_description_kinematics": load_yaml(
-            PKG, os.path.join(MOVEIT_CFG_DIR, "kinematics.yaml")
+            os.path.join(pkg_share, "moveit_config", "kinematics.yaml")
         )
     }
 
     joint_limits = {
         "robot_description_planning": load_yaml(
-            PKG, os.path.join(MOVEIT_CFG_DIR, "joint_limits.yaml")
+            os.path.join(pkg_share, "moveit_config", "joint_limits.yaml")
         )
     }
 
     planning_pipeline = {
-        "planning_pipelines": ["ompl"],
-        "default_planning_pipeline": "ompl",
-        "ompl": load_yaml(PKG, os.path.join(MOVEIT_CFG_DIR, "ompl_planning.yaml")),
+        'default_planning_pipeline': 'ompl',
+        'planning_pipelines': ['ompl'],
     }
+
+    planning_pipeline['ompl'] = {
+        'planning_plugins': ['ompl_interface/OMPLPlanner'],
+        'request_adapters': [
+            'default_planning_request_adapters/ResolveConstraintFrames',
+            'default_planning_request_adapters/ValidateWorkspaceBounds',
+            'default_planning_request_adapters/CheckStartStateBounds',
+            'default_planning_request_adapters/CheckStartStateCollision',
+        ],
+        'response_adapters': [
+            'default_planning_response_adapters/AddTimeOptimalParameterization',
+            'default_planning_response_adapters/ValidateSolution',
+            'default_planning_response_adapters/DisplayMotionPath',
+        ],
+    }
+
+    planning_pipeline['ompl'].update(load_yaml(os.path.join(pkg_share, "moveit_config", "ompl_planning.yaml")))
 
     planning_scene_monitor_parameters = {
         "publish_planning_scene": True,
@@ -93,13 +104,12 @@ def generate_launch_description():
     moveit_controller_manager = {
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
         "moveit_simple_controller_manager": load_yaml(
-            PKG, os.path.join(MOVEIT_CFG_DIR, "moveit_controllers.yaml")
+            os.path.join(pkg_share, "moveit_config", "moveit_controllers.yaml")
         ),
     }
 
     trajectory_execution = {
         "allow_trajectory_execution": True,
-        # Controllers are spawned/managed elsewhere (e.g., controller_manager spawners)
         "moveit_manage_controllers": False,
         "execution_duration_monitoring": False,
         "trajectory_execution.allowed_execution_duration_scaling": 1.5,
@@ -116,6 +126,24 @@ def generate_launch_description():
         output="screen",
         arguments=["--ros-args", "--log-level", LOG_LEVEL],
         parameters=[robot_description, {"use_sim_time": USE_SIM_TIME}],
+    )
+
+    moveit_servo = Node(
+        package="moveit_servo",
+        executable="servo_node",
+        output="log",
+        arguments=["--ros-args", "--log-level", LOG_LEVEL],
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            robot_description_kinematics,
+            joint_limits,
+            planning_pipeline,
+            trajectory_execution,
+            planning_scene_monitor_parameters,
+            servo_params,
+            {"use_sim_time": USE_SIM_TIME}
+        ]
     )
 
     move_group = Node(
@@ -136,7 +164,7 @@ def generate_launch_description():
         ],
     )
 
-    nodes = [robot_state_publisher, move_group]
+    nodes = [robot_state_publisher, moveit_servo, move_group]
 
     if ENABLE_RVIZ:
         rviz2 = Node(

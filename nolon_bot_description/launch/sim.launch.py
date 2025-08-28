@@ -40,7 +40,12 @@ def generate_launch_description():
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     gz_launch_path = PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
 
-    doc = xacro.process_file(urdf_path)
+    doc = xacro.process_file(
+        urdf_path,
+        mappings={
+            "use_gazebo": "true",
+        }
+    )
     robot_description_config = doc.toxml()
 
     declare_world_path = IncludeLaunchDescription(
