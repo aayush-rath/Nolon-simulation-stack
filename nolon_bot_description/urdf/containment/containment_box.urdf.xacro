@@ -34,45 +34,57 @@ TODO:
   <!-- ================= MACROS ================= -->
 
   <!-- Generic mesh link -->
-<xacro:macro name="mesh_link" params="name mesh mass ixx iyy izz ixy ixz iyz ox oy oz orx ory orz">
-  <link name="${name}">
-    <visual>
-      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
-      <geometry>
-        <mesh filename="${mesh_path}${mesh}"/>
-      </geometry>
-      <material name="DarkGreyShiny">
-        <!-- Darker grey -->
-        <color rgba="0.3 0.3 0.3 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
-      <geometry>
-        <mesh filename="${mesh_path}${mesh}"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="${mass}"/>
-      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
-      <inertia ixx="${ixx}" iyy="${iyy}" izz="${izz}" ixy="${ixy}" ixz="${ixz}" iyz="${iyz}"/>
-    </inertial>
-  </link>
+  <xacro:macro name="mesh_link" params="name mesh mass ixx iyy izz ixy ixz iyz ox oy oz orx ory orz">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <geometry>
+          <mesh filename="${mesh_path}${mesh}"/>
+        </geometry>
+        <material name="DarkGreyShiny">
+          <!-- Darker grey -->
+          <color rgba="0.3 0.3 0.3 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <geometry>
+          <mesh filename="${mesh_path}${mesh}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+        <inertia ixx="${ixx}" iyy="${iyy}" izz="${izz}" ixy="${ixy}" ixz="${ixz}" iyz="${iyz}"/>
+      </inertial>
+    </link>
 
-  <gazebo reference="${name}">
-    <material>Gazebo/Grey</material>
-    <material>
-      <ambient>0.3 0.3 0.3 1</ambient>
-      <diffuse>0.3 0.3 0.3 1</diffuse>
-      <specular>0.6 0.6 0.6 1</specular>
-      <emissive>0 0 0 1</emissive>
-    </material>
-  </gazebo>
-</xacro:macro>
+    <gazebo reference="${name}">
+      <material>Gazebo/Grey</material>
+      <material>
+        <ambient>0.3 0.3 0.3 1</ambient>
+        <diffuse>0.3 0.3 0.3 1</diffuse>
+        <specular>0.6 0.6 0.6 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="fixed_joint" params="parent child ox oy oz orx ory orz">
+    <joint name="${parent}_to_${child}" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <origin xyz="${ox} ${oy} ${oz}" rpy="${orx} ${ory} ${orz}"/>
+    </joint>
+  </xacro:macro>
 
 
   <!-- ================= ROBOT STRUCTURE ================= -->
 
   <!-- Containment Box -->
-  <xacro:mesh_link name="containment_box" mesh="containment_box.stl" mass="5.0" ixx="2.0" iyy="2.0" izz="2.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:mesh_link name="containment_box" mesh="containment_box_0.stl" mass="5.0" ixx="2.0" iyy="2.0" izz="2.0" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+
+  <!-- Text Box -->
+  <!-- <xacro:mesh_link name="text" mesh="text.stl" mass="0.01" ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0" ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/>
+  <xacro:fixed_joint parent="containment_box" child="text"  ox="0" oy="0" oz="0" orx="0" ory="0" orz="0"/> -->
 </robot>
