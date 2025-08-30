@@ -254,6 +254,9 @@ Configure `config/nolon_gz_bridge.yaml` for:
 ## Advanced Features
 
 ### USD Support (Isaac Sim Integration)
+<div align="center">
+<img src="images/Nolon_bot_isaac.png">
+</div>
 The robot includes USD (Universal Scene Description) files for Isaac Sim compatibility:
 - `nolon_bot.usd`: Main robot USD file for Isaac Sim
 - `configuration/`: Modular USD components for Isaac Sim
